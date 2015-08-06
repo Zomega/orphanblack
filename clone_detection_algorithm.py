@@ -17,6 +17,7 @@
 
 import sys
 
+import suffix_tree
 from anti_unification import *
 from abstract_syntax_tree import *
 
@@ -45,7 +46,7 @@ def findDuplicateCode(source_files, report):
         print 'maximum sequence length: %d' % (max_seq_length,)
         sequences_without_restriction = statement_sequences
         sequences = []
-        if not arguments.force:
+        if not report.parameters.force:
             for sequence in sequences_without_restriction:
                 if len(sequence) > 1000:
                     first_statement = sequence[0]
@@ -70,7 +71,7 @@ def findDuplicateCode(source_files, report):
             for statement in statement_sequence:
                 if dcup_hash:
                     # 3 - CONSTANT HERE!
-                    h = statement.getDCupHash(arguments.hashing_depth)
+                    h = statement.getDCupHash(report.parameters.hashing_depth)
                 else:
                     h = statement.getFullHash()
                 if not h in hash_to_statement:
@@ -102,7 +103,7 @@ def findDuplicateCode(source_files, report):
                 if mincost < 0:
                     pdb.set_trace()
                 assert(mincost >= 0)
-                if bestcluster is None or mincost > arguments.clustering_threshold:
+                if bestcluster is None or mincost > report.parameters.clustering_threshold:
                     newcluster = Cluster(statement)
                     local_clusters.append(newcluster)
                 else:
@@ -167,12 +168,12 @@ def findDuplicateCode(source_files, report):
                             print '-----------------------------------------'
                             flag = True
             new_sequence = new_sequence + [None]
-            cur_sequence = StatementSequence()
+            cur_sequence = StatementSequence(report.parameters)
             for statement in new_sequence:
                 if statement is None:
                     if cur_sequence:
                         statement_sequences.append(cur_sequence)
-                        cur_sequence = StatementSequence()
+                        cur_sequence = StatementSequence(report.parameters)
                 else:
                     cur_sequence.addStatement(statement)
         return statement_sequences
@@ -189,7 +190,7 @@ def findDuplicateCode(source_files, report):
             return x.getMaxCoveredLines()
 
         def f_elem(x):
-            return StatementSequence(x).getCoveredLineNumbersCount()
+            return StatementSequence(report.parameters, x).getCoveredLineNumbersCount()
 
         def fcode(x):
             return x.getMark()
@@ -197,7 +198,7 @@ def findDuplicateCode(source_files, report):
         suffix_tree_instance = suffix_tree.SuffixTree(fcode)
         for sequence in statement_sequences:
             suffix_tree_instance.add(sequence)
-        return [PairSequences([StatementSequence(s1), StatementSequence(s2)]) for (s1, s2) in suffix_tree_instance.getBestMaxSubstrings(arguments.size_threshold, f, f_elem)]
+        return [PairSequences(report.parameters, [StatementSequence(report.parameters, s1), StatementSequence(report.parameters, s2)]) for (s1, s2) in suffix_tree_instance.getBestMaxSubstrings(report.parameters.size_threshold, f, f_elem)]
 
     def refineDuplicates(pairs_sequences):
         r = []
@@ -210,7 +211,7 @@ def findDuplicateCode(source_files, report):
                 for first in range(0, pair_sequences.getLength()-n+1):
                     new_pair_sequences = pair_sequences.subSequence(first, n)
                     size = new_pair_sequences.getMaxCoveredLineNumbersCount()
-                    if size >= arguments.size_threshold:
+                    if size >= report.parameters.size_threshold:
                         lr.append((new_pair_sequences, first))
                 return lr
             n = pair_sequences.getLength() + 1
@@ -221,7 +222,7 @@ def findDuplicateCode(source_files, report):
                 new_pairs_sequences = all_pairsubsequences_size_n_threshold(n)
                 for (candidate_sequence, first) in new_pairs_sequences:
                     distance = candidate_sequence.calcDistance()
-                    if (distance < arguments.distance_threshold):
+                    if (distance < report.parameters.distance_threshold):
                         r.append(candidate_sequence)
                         if first > 0:
                             pairs_sequences.append(pair_sequences.subSequence(0, first-1))
@@ -281,7 +282,7 @@ def findDuplicateCode(source_files, report):
     if verbose:
         print 'Building statement hash...',
         sys.stdout.flush()
-    if arguments.clusterize_using_hash:
+    if report.parameters.clusterize_using_hash:
         hash_to_statement = build_hash_to_statement(dcup_hash=False)
     else:
         hash_to_statement = build_hash_to_statement(dcup_hash=True)
@@ -289,7 +290,7 @@ def findDuplicateCode(source_files, report):
         print 'done'
         print 'Number of different hash values: ', len(hash_to_statement)
 
-    if arguments.clusterize_using_dcup or arguments.clusterize_using_hash:
+    if report.parameters.clusterize_using_dcup or report.parameters.clusterize_using_hash:
         print 'Marking each statement with its hash value'
         mark_using_hash(hash_to_statement)
     else:
@@ -305,7 +306,7 @@ def findDuplicateCode(source_files, report):
         if verbose:
             print 'done'
 
-    if arguments.report_unifiers:
+    if report.parameters.report_unifiers:
         if verbose:
             print 'Building reverse hash for reporting ...',
             sys.stdout.flush()
@@ -324,7 +325,7 @@ def findDuplicateCode(source_files, report):
         print 'Finding similar sequences of statements...',
         sys.stdout.flush()
 
-    if not arguments.force:
+    if not report.parameters.force:
         statement_sequences = filterOutLongEquallyLabeledSequences(statement_sequences)
 
     duplicate_candidates = findHugeSequences()
@@ -332,13 +333,13 @@ def findDuplicateCode(source_files, report):
         print len(duplicate_candidates), ' sequences were found'
         print 'Refining candidates...',
         sys.stdout.flush()
-    if arguments.distance_threshold != -1:
+    if report.parameters.distance_threshold != -1:
         clones = refineDuplicates(duplicate_candidates)
     else:
         clones = duplicate_candidates
     if verbose:
         print len(clones), 'clones were found'
-    if arguments.distance_threshold != -1:
+    if report.parameters.distance_threshold != -1:
         if verbose:
             print 'Removing dominated clones...',
             sys.stdout.flush()

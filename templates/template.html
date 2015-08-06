@@ -48,22 +48,22 @@
     <a href="javascript:unhide('files');">Click here to show/hide file names</a>
     <div id="files" class="hidden">
         <p><b>Source files:</b>
-            {% for filename in filenames %}<br/>{{filename}}
+            {% for filename in report.filenames %}<br/>{{filename}}
             {% endfor %}</p>
     </div>
-    <p>Clones detected: {{clones|count}}</p>
+    <p>Clones detected: {{report.clones|count}}</p>
     <p>{{report.covered_source_lines_count}} of {{report.all_source_lines_count}} lines are duplicates ({{'%0.3f' %percent_source_line_clones|float}}%) </p>
     <p>
         <b>Parameters</b>
-        <br> clustering_threshold = {{parameters.clustering_threshold}}
-        <br> distance_threshold = {{parameters.distance_threshold}}
-        <br> size_threshold = {{parameters.size_threshold}}
-        <br> hashing_depth = {{parameters.hashing_depth}}
-        <br> clusterize_using_hash = {{parameters.clusterize_using_hash}}
-        <br> clusterize_using_dcup = {{parameters.clusterize_using_dcup}}
+        <br> clustering_threshold = {{report.parameters.clustering_threshold}}
+        <br> distance_threshold = {{report.parameters.distance_threshold}}
+        <br> size_threshold = {{report.parameters.size_threshold}}
+        <br> hashing_depth = {{report.parameters.hashing_depth}}
+        <br> clusterize_using_hash = {{report.parameters.clusterize_using_hash}}
+        <br> clusterize_using_dcup = {{report.parameters.clusterize_using_dcup}}
         <br>
     </p>
-    {% for clone in clones %}<p><b>Clone # {{loop.index}}</b>
+    {% for clone in report.clones %}<p><b>Clone # {{loop.index}}</b>
         <br>Distance between two fragments = {{clone.calcDistance()}}
         <br>Clone size = {{clone.calcSize()}}
         <table nowrap="" width="100%" max-width="100%" border="1">

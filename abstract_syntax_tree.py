@@ -18,8 +18,6 @@
 
 import types
 
-import arguments
-
 free_variable_cost = 0.5
 
 
@@ -35,7 +33,7 @@ class SourceFile:
     size_threshold = 5
     distance_threshold = 5
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, parameters):
         f = open(file_name, 'r')
 
         def filter_func(s):
@@ -49,6 +47,7 @@ class SourceFile:
         self._source_lines = [filter_func(s) for s in f.readlines()]
         f.close()
         self._file_name = file_name
+        self._parameters = parameters
 
     def getSourceLine(self, n):
 #       if n >= len(self._source_lines):
@@ -68,7 +67,8 @@ class SourceFile:
 
 
 class AbstractSyntaxTree:
-    def __init__(self, name=None, line_numbers=[], source_file=None):
+    def __init__(self, parameters, name, line_numbers=[], source_file=None):
+        self._parameters = parameters
         self._childs = []
         self._line_numbers = line_numbers
         self._covered_line_numbers = None
@@ -76,8 +76,7 @@ class AbstractSyntaxTree:
         self._hash = None
         self._source_file = source_file
         self._is_statement = False
-        if name is not None:
-            self.setName(name)
+        self._name = name
 
     def getSourceFile(self):
         return self._source_file
@@ -211,16 +210,16 @@ class AbstractSyntaxTree:
 
     def getAllStatementSequences(self):
         r = []
-        current = StatementSequence()
+        current = StatementSequence(self._parameters)
         for child in self.getChilds():
             if child.isStatement():
                 current.addStatement(child)
             else:
-                if (not current.isEmpty()) and len(current.getCoveredLineNumbers()) >= arguments.size_threshold:
+                if (not current.isEmpty()) and len(current.getCoveredLineNumbers()) >= self._parameters.size_threshold:
                     r.append(current)
-                    current = StatementSequence()
+                    current = StatementSequence(self._parameters)
             r.extend(child.getAllStatementSequences())
-        if (not current.isEmpty()) and len(current.getCoveredLineNumbers()) >= arguments.size_threshold:
+        if (not current.isEmpty()) and len(current.getCoveredLineNumbers()) >= self._parameters.size_threshold:
             r.append(current)
         return r
 
@@ -271,7 +270,8 @@ class AbstractSyntaxTree:
 
 
 class StatementSequence:
-    def __init__(self, sequence=[]):
+    def __init__(self, parameters, sequence=[]):
+        self._parameters = parameters
         self._sequence = []
         self._source_file = None
         for s in sequence:
@@ -333,7 +333,7 @@ class StatementSequence:
         return set([(source_file_name, line_number) for line_number in line_numbers])
 
     def constructTree(self):
-        tree = AbstractSyntaxTree('__SEQUENCE__')
+        tree = AbstractSyntaxTree(self._parameters, name='__SEQUENCE__')
         for statement in self:
             tree.addChild(statement, True)
         return tree
@@ -349,7 +349,8 @@ class StatementSequence:
 
 
 class PairSequences:
-    def __init__(self, sequences):
+    def __init__(self, parameters, sequences):
+        self._parameters = parameters
         self._sequences = sequences
 
     def __getitem__(self, *args):
@@ -372,7 +373,7 @@ class PairSequences:
         return max([len(set(self[i].getCoveredLineNumbers())) for i in [0, 1]])
 
     def subSequence(self, first, length):
-        return PairSequences([StatementSequence(self[0][first:first+length]), StatementSequence(self[1][first:first+length])])
+        return PairSequences(self._parameters, [StatementSequence(self._parameters, self[0][first:first+length]), StatementSequence(self._parameters, self[1][first:first+length])])
 
     def getLength(self):
         return self[0].getLength()

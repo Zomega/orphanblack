@@ -16,11 +16,8 @@
 #   along with Clone Digger.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
-import sys
 
 from abstract_syntax_tree import *
-import suffix_tree
-import arguments
 
 # NOTE that everywhere is written Unifier instead of AntiUnifier, for simplicity
 
@@ -31,12 +28,12 @@ verbose = True
 class FreeVariable(AbstractSyntaxTree):
     free_variables_count = 1
 
-    def __init__(self):
+    def __init__(self, parameters):
         global free_variables_count
         FreeVariable.free_variables_count += 1
         name = 'VAR(%d)' % (FreeVariable.free_variables_count, )
 #       self._childs = []
-        AbstractSyntaxTree.__init__(self, name)
+        AbstractSyntaxTree.__init__(self, parameters, name)
 
 
 class Substitution:
@@ -54,7 +51,7 @@ class Substitution:
             if without_copying:
                 return tree
             else:
-                r = AbstractSyntaxTree(tree.getName())
+                r = AbstractSyntaxTree(tree._parameters, tree.getName())
                 for child in tree.getChilds():
                     r.addChild(self.substitute(child, without_copying))
                 return r
@@ -91,15 +88,16 @@ class Unifier:
             return (Substitution(relabel).substitute(node), newt)
 
         def unify(node1, node2):
+            parameters = node1._parameters
             if node1 == node2:
                 return (node1, (Substitution(), Substitution()))
             elif (node1.getName() != node2.getName()) or (node1.getChildCount() != node2.getChildCount()):
-                var = FreeVariable()
+                var = FreeVariable(parameters)
                 return (var, (Substitution({var: node1}), Substitution({var: node2})))
             else:
                 s = (Substitution(), Substitution())
                 name = node1.getName()
-                retNode = AbstractSyntaxTree(name)
+                retNode = AbstractSyntaxTree(parameters, name)
                 count = node1.getChildCount()
                 for i in range(count):
                     (ai, si) = unify(node1.getChilds()[i], node2.getChilds()[i])

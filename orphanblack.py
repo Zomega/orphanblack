@@ -25,7 +25,8 @@ import click
 
 import ast_suppliers
 import clone_detection_algorithm
-import arguments
+
+from parameters import Parameters
 from report import Report
 import html_writer
 
@@ -109,17 +110,25 @@ def scan(language, no_recursion, output_file_name, distance_threshold, hashing_d
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
+  parameters = Parameters()
+
+  if distance_threshold is None:
+    parameters.distance_threshold = supplier.distance_threshold
+  else:
+    parameters.distance_threshold = distance_threshold
+
+  if size_threshold is None:
+    parameters.size_threshold = supplier.size_threshold
+  else:
+    parameters.size_threshold = size_threshold
+
   source_files = []
   source_file_names = list(source_file_names)
 
-  if distance_threshold is None:
-    distance_threshold = supplier.distance_threshold
-  if size_threshold is None:
-    size_threshold = supplier.size_threshold
-
-  report = Report()
+  report = Report(parameters)
 
   ####### TODO: MAKE FILE LIST
+  ####### TODO: Populate parameters
   #for option in cmdline.option_list:
   #  if option.dest == 'file_list' and options.file_list is not None:
   #    source_file_names.extend(open(options.file_list).read().split())
@@ -133,7 +142,7 @@ def scan(language, no_recursion, output_file_name, distance_threshold, hashing_d
     try:
       print 'Parsing ', file_name, '...',
       sys.stdout.flush()
-      source_file = supplier(file_name)
+      source_file = supplier(file_name, parameters)
       source_file.getTree().propagateCoveredLineNumbers()
       source_file.getTree().propagateHeight()
       source_files.append(source_file)

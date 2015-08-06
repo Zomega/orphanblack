@@ -41,8 +41,8 @@ class PythonCompilerSourceFile (SourceFile):
     size_threshold = 5
     ignored_statements = ['Import', 'From']
 
-    def __init__(self, file_name, func_prefixes=()):
-        SourceFile.__init__(self, file_name)
+    def __init__(self, file_name, parameters, func_prefixes=()):
+        SourceFile.__init__(self, file_name, parameters)
         self._func_prefixes = func_prefixes
 
         def rec_build_tree(compiler_ast_node, is_statement=False):
@@ -71,7 +71,7 @@ class PythonCompilerSourceFile (SourceFile):
             def add_leaf_child(child, name):
                 assert not isinstance(child, list)
                 assert not isinstance(child, compiler.ast.Node)
-                t = AbstractSyntaxTree(repr(child))
+                t = AbstractSyntaxTree(self._parameters, repr(child))
                 t.setParent(r)
                 l = PythonNodeLeaf(child)
                 t.ast_node = l
@@ -85,7 +85,7 @@ class PythonCompilerSourceFile (SourceFile):
                 for i in range(len(childs)):
                     child = childs[i]
                     assert(not isinstance(child, compiler.ast.Node))
-                    t = AbstractSyntaxTree(repr(child))
+                    t = AbstractSyntaxTree(self._parameters, repr(child))
                     t.setParent(r)
                     l = PythonNodeLeaf(child)
                     t.ast_node = l
@@ -96,7 +96,7 @@ class PythonCompilerSourceFile (SourceFile):
                 assert isinstance(childs, list)
                 for child in childs:
                     assert not isinstance(child, compiler.ast.Node)
-                    t = AbstractSyntaxTree(repr(child))
+                    t = AbstractSyntaxTree(self._parameters, repr(child))
                     t.setParent(t)
                     r.addChild(t)
 
@@ -106,7 +106,7 @@ class PythonCompilerSourceFile (SourceFile):
                    for prefix in self._func_prefixes:
                        if compiler_ast_node.name.startswith(prefix):
                            # skip function that matches pattern
-                           return AbstractSyntaxTree('none')
+                           return AbstractSyntaxTree(self._parameters, 'none')
                 if name in ['Function', 'Class']:
                     # ignoring class and function docs
                     compiler_ast_node.doc = None
@@ -114,7 +114,7 @@ class PythonCompilerSourceFile (SourceFile):
                     lines = [compiler_ast_node.lineno-1]
                 else:
                     lines = []
-                r = AbstractSyntaxTree(name, lines, self)
+                r = AbstractSyntaxTree(self._parameters, name, lines, self)
                 r.ast_node = compiler_ast_node
                 if is_statement and compiler_ast_node.lineno:
                     r.markAsStatement()
@@ -187,5 +187,5 @@ class PythonCompilerSourceFile (SourceFile):
                         r.addChild(t)
                 return r
             else:
-                return AbstractSyntaxTree(repr(compiler_ast_node))
+                return AbstractSyntaxTree(self._parameters, repr(compiler_ast_node))
         self._setTree(rec_build_tree(compiler.parseFile(file_name)))
