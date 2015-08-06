@@ -26,7 +26,8 @@ import click
 import ast_suppliers
 import clone_detection_algorithm
 import arguments
-import html_report
+from report import Report
+import html_writer
 
 # TODO: Incorprate into CLI?
 """To run Clone Digger type:
@@ -111,7 +112,7 @@ def orphanblack_cli(language, no_recursion, output_file_name, distance_threshold
   if size_threshold is None:
     size_threshold = supplier.size_threshold
 
-  report = html_report.Report()  # TODO: The report should be processed, not instantiated.
+  report = Report()
 
   ####### TODO: MAKE FILE LIST
   #for option in cmdline.option_list:
@@ -166,7 +167,7 @@ def orphanblack_cli(language, no_recursion, output_file_name, distance_threshold
     report.addClone(duplicate)
   report.sortByCloneSize()
   try:
-    html_report.writeReportToHTML(report, output_file_name)
+    html_writer.new_write(report, output_file_name)
   except:
     print "catched error, removing output file"
     if os.path.exists(output_file_name):

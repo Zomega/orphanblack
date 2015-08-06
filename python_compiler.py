@@ -17,8 +17,6 @@
 #   along with Clone Digger.  If not, see <http://www.gnu.org/licenses/>.
 
 import compiler
-import types
-# import logilab.astng.nodes
 
 from abstract_syntax_tree import *
 
@@ -60,7 +58,7 @@ class PythonCompilerSourceFile (SourceFile):
                 return l
 
             def add_childs(childs):
-                assert(type(childs) == type([]))
+                assert isinstance(childs, list)
                 for child in childs:
                     assert(isinstance(child, compiler.ast.Node))
                     t = rec_build_tree(child, is_statement)
@@ -71,8 +69,8 @@ class PythonCompilerSourceFile (SourceFile):
                     r.addChild(t)
 
             def add_leaf_child(child, name):
-                assert(not (type(child) == type([])))
-                assert(not isinstance(child, compiler.ast.Node))
+                assert not isinstance(child, list)
+                assert not isinstance(child, compiler.ast.Node)
                 t = AbstractSyntaxTree(repr(child))
                 t.setParent(r)
                 l = PythonNodeLeaf(child)
@@ -82,7 +80,7 @@ class PythonCompilerSourceFile (SourceFile):
                 return t
 
             def add_leaf_childs(childs, name):
-                assert(type(childs) == type([]) or type(childs) == type((0,)))
+                assert isinstance(childs, list) or isinstance(childs, tuple)
                 a = getattr(r.ast_node, name)
                 for i in range(len(childs)):
                     child = childs[i]
@@ -95,9 +93,9 @@ class PythonCompilerSourceFile (SourceFile):
                     a[i] = l
 
             def add_leaf_string_childs(childs):
-                assert(type(childs) == type([]))
+                assert isinstance(childs, list)
                 for child in childs:
-                    assert(not isinstance(child, compiler.ast.Node))
+                    assert not isinstance(child, compiler.ast.Node)
                     t = AbstractSyntaxTree(repr(child))
                     t.setParent(t)
                     r.addChild(t)

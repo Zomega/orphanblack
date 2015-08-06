@@ -1,4 +1,5 @@
 #    Copyright 2008 Peter Bulychev
+#    Copyright 2015 Will Oursler
 #
 #    This file is part of Clone Digger.
 #
@@ -101,6 +102,9 @@ class AbstractSyntaxTree:
 
     def getCoveredLineNumbers(self):
         return self._covered_line_numbers
+
+    def getStartLineNumber(self):
+        return min(self.getCoveredLineNumbers())
 
     def getParent(self):
         return self._parent
@@ -279,6 +283,9 @@ class StatementSequence:
             r.update(s.getCoveredLineNumbers())
         return r
 
+    def getStartLineNumber(self):
+        return min(self.getCoveredLineNumbers())
+
     def getAncestors(self):
         return self[0].getAncestors()
 
@@ -360,6 +367,9 @@ class PairSequences:
         trees = [s.constructTree() for s in self]
         unifier = anti_unification.Unifier(trees[0], trees[1])
         return unifier.getSize()
+
+    def calcSize(self):
+        return max([len(set(self[i].getCoveredLineNumbers())) for i in [0, 1]])
 
     def subSequence(self, first, length):
         return PairSequences([StatementSequence(self[0][first:first+length]), StatementSequence(self[1][first:first+length])])

@@ -73,7 +73,7 @@ def findDuplicateCode(source_files, report):
                     h = statement.getDCupHash(arguments.hashing_depth)
                 else:
                     h = statement.getFullHash()
-                if not hash_to_statement.has_key(h):
+                if not h in hash_to_statement:
                     hash_to_statement[h] = [statement]
                 else:
                     hash_to_statement[h].append(statement)
@@ -244,14 +244,14 @@ def findDuplicateCode(source_files, report):
         for clone in clones:
             for sequence in clone:
                 for statement in sequence:
-                    if not statement_to_clone.has_key(statement):
+                    if statement not in statement_to_clone:
                         statement_to_clone[statement] = []
                     statement_to_clone[statement].append(clone)
         for clone in clones:
             ancestors_2 = clone[1].getAncestors()
             flag = True
             for s1 in clone[0].getAncestors():
-                if statement_to_clone.has_key(s1):
+                if s1 in statement_to_clone:
                     for clone2 in statement_to_clone[s1]:
                         if s1 in clone2[0]:
                             seq = clone2[1]
@@ -313,7 +313,7 @@ def findDuplicateCode(source_files, report):
         for sequence in statement_sequences:
             for statement in sequence:
                 mark = statement.getMark()
-                if not reverse_hash.has_key(mark):
+                if mark not in reverse_hash:
                     reverse_hash[mark] = []
                 reverse_hash[mark].append(statement)
         report.setMarkToStatementHash(reverse_hash)

@@ -4,7 +4,7 @@ Clone Digger README
 
 available at http://clonedigger.sourceforge.net
 
-Clone Digger is the tool for finding software clones. 
+Clone Digger is the tool for finding software clones.
 Currently only Python language is supported, Java support will be added soon.
 See the site for details.
 
@@ -29,4 +29,5 @@ The available arguments can be obtained using '--help' also.
 ========
 Changes
 ========
+
 * Internally use Click instead of optparse to clean up options.
