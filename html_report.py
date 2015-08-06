@@ -48,45 +48,18 @@ class Report:
     def startTimer(self, descr):
         self._timers.append([descr, time.time(), time.ctime()])
         sys.stdout.flush()
-    def stopTimer(self, descr=''):      
+    def stopTimer(self, descr=''):
         self._timers[-1][1] = time.time() - self._timers[-1][1]
     def getTimerValues(self):
         return self._timers
     def getTotalTime(self):
         return sum([i[1] for i in self.getTimerValues()])
 
-class CPDXMLReport(Report):
-    def __init__(self):
-        Report.__init__(self)
-        self._mark_to_statement_hash = None
-    def setMarkToStatementHash(self, mark_to_statement_hash):   
-        self._mark_to_statement_hash = mark_to_statement_hash
-    def writeReport(self, file_name):
-	f = open(file_name, 'w')
-	f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-	f.write('<pmd-cpd>\n')
-	for clone in self._clones:	    
-	    token_numbers = [sum([s.getTokenCount() for s in clone[i]]) for i in (0,1)]
-	    f.write('<duplication lines="' + str(max([len(set(clone[i].getCoveredLineNumbers())) for i in [0,1]] )) + '" tokens="' + str(max(token_numbers)) +'">\n')
-	    for i in [0,1]:
-		f.write('<file line="' + str(1 + min(clone[i].getCoveredLineNumbers())) +  '" path="' + os.path.abspath(clone[i].getSourceFile().getFileName()) + '"/>\n')
-	    f.write('<codefragment>\n')
-	    f.write('<![CDATA[\n')
-	    for line in clone[0].getSourceLines():
-		f.write(line.replace(']]>','-CLONEDIGGER REMOVED CDATAEND-'))
-                f.write('\n')
-	    f.write(']]>\n')
-	    f.write('</codefragment>\n')
-	    f.write('</duplication>\n')
-	f.write('</pmd-cpd>\n')
-	f.close()
-
-
 class HTMLReport(Report):
     def __init__(self):
         Report.__init__(self)
         self._mark_to_statement_hash = None
-    def setMarkToStatementHash(self, mark_to_statement_hash):   
+    def setMarkToStatementHash(self, mark_to_statement_hash):
         self._mark_to_statement_hash = mark_to_statement_hash
     def writeReport(self, file_name):
 # TODO REWRITE! This function code was created in a hurry
@@ -145,7 +118,7 @@ class HTMLReport(Report):
                             block = blocks[i]
                             for j in [0,1]:
                                 r[j] += escape(seqs[j][block[j]:block[j]+block[2]])
-                            if (i < (len(blocks)-1)):                           
+                            if (i < (len(blocks)-1)):
                                 nextblock = blocks[i+1]
                                 for j in [0,1]:
                                     r[j] += '<span'+very_strange_const+'style="color:rgb(255,0,0);">%s</span>'%\
@@ -168,7 +141,7 @@ class HTMLReport(Report):
                                 source_line = re.sub('^' + indent1,  indentations[j].index(indent2)*' ', source_line)
                                 source_lines[j].append(source_line)
                         d = diff_highlight([('\n'.join(source_lines[j])) for j in [0,1]])
-                        d = [format_line_code(d[i].replace('\n', '<BR>\n')) for i in [0,1]]                
+                        d = [format_line_code(d[i].replace('\n', '<BR>\n')) for i in [0,1]]
                         d = [d[i].replace(very_strange_const, ' ') for i in (0,1)]
                         u = anti_unification.Unifier(statements[0], statements[1])
                         return d,u
@@ -227,10 +200,10 @@ class HTMLReport(Report):
 
                         except:
                             print 'The following error occured during highlighting of differences on the AST level:'
-                            traceback.print_exc()                       
+                            traceback.print_exc()
                             print 'using diff highlight'
                             (d,u) = use_diff()
-                    for j in [0,1]:                 
+                    for j in [0,1]:
                         t.append('<TD>\n' + d[j] + '</TD>\n')
                     if u.getSize() > 0:
                         color = 'RED'
@@ -242,8 +215,8 @@ class HTMLReport(Report):
                 clone_descriptions.append(s)
             except:
                 print "Clone info can't be written to the report. "
-                traceback.print_exc()                   
-        
+                traceback.print_exc()
+
         descr = """<P>Source files: %d</P>
         <a href = "javascript:unhide('files');">Click here to show/hide file names</a><div id="files" class="hidden"><P><B>Source files:</B><BR>%s</P></div>
         <P>Clones detected: %d</P>
@@ -256,23 +229,23 @@ size_threshold = %d<BR>
 hashing_depth = %d<BR>
 clusterize_using_hash = %s<BR>
 clusterize_using_dcup = %s<BR>
-</P> 
+</P>
         """ % (len(self._file_names), ', <BR>'.join(self._file_names), len(self._clones), self.covered_source_lines_count, self.all_source_lines_count, (not self.all_source_lines_count and 100) or 100*self.covered_source_lines_count/float(self.all_source_lines_count), arguments.clustering_threshold, arguments.distance_threshold, arguments.size_threshold, arguments.hashing_depth, str(arguments.clusterize_using_hash), str(arguments.clusterize_using_dcup))
-        if arguments.print_time:
+        if True:
             timings = ''
             timings += '<B>Time elapsed</B><BR>'
-            timings += '<BR>\n'.join(['%s : %.2f seconds'%(i[0], i[1]) for i in self._timers])
+            timings += '<BR>\n'.join(['%s : %.2f seconds' % (i[0], i[1]) for i in self._timers])
             timings += '<BR>\n Total time: %.2f' % (self.getTotalTime())
             timings += '<BR>\n Started at: ' + self._timers[0][2]
             timings += '<BR>\n Finished at: ' + self._timers[-1][2]
         else:
             timings = ''
-        
+
         marks_report = ''
         if self._mark_to_statement_hash:
             marks_report += '<P>Top 20 statement marks:'
             marks = self._mark_to_statement_hash.keys()
-            marks.sort(lambda y,x:cmp(len(self._mark_to_statement_hash[x]), len(self._mark_to_statement_hash[y])))
+            marks.sort(lambda y, x: cmp(len(self._mark_to_statement_hash[x]), len(self._mark_to_statement_hash[y])))
             counter = 0
             for mark in marks[:20]:
                 counter += 1
@@ -286,7 +259,7 @@ clusterize_using_dcup = %s<BR>
         warnings = ''
         if arguments.use_diff:
             warnings += '<P>(*) Warning: the highlighting of differences is based on diff and doesn\'t reflect the tree-based clone detection algorithm.</P>'
-        save_to = eclipse_start + '<b><a href="file://%s">Save this report</a></b>'%(file_name,) +eclipse_end   
+        save_to = eclipse_start + '<b><a href="file://%s">Save this report</a></b>'%(file_name,) +eclipse_end
         HTML_code = """
 <HTML>
     <HEAD>
@@ -345,7 +318,3 @@ clusterize_using_dcup = %s<BR>
         f = open(file_name, 'w')
         f.write(re.sub(eclipse_start+'.*?'+eclipse_end, '' ,HTML_code))
         f.close()
-        if arguments.eclipse_output:
-            f = open(arguments.eclipse_output, 'w')
-            f.write(HTML_code)
-            f.close()

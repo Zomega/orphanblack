@@ -24,3 +24,9 @@ Don't forget to remove automatically generated sources, tests and third party li
 See http://clonedigger.sourceforge.net/documentation.html for more complex arguments.
 
 The available arguments can be obtained using '--help' also.
+
+
+========
+Changes
+========
+* Internally use Click instead of optparse to clean up options.
