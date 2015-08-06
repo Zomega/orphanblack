@@ -18,7 +18,7 @@
 
 import compiler
 import types
-import logilab.astng.nodes
+# import logilab.astng.nodes
 
 from abstract_syntax_tree import *
 
