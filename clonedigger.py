@@ -123,8 +123,6 @@ def orphanblack_cli(language, no_recursion, output_file_name, distance_threshold
   #  setattr(arguments, option.dest, getattr(options, option.dest))
   ########
 
-  report.startTimer('Construction of AST')  # TODO: This is a job for a profiler, not this software.
-
   def parse_file(file_name):
     try:
       print 'Parsing ', file_name, '...',
@@ -163,7 +161,6 @@ def orphanblack_cli(language, no_recursion, output_file_name, distance_threshold
     else:
       parse_file(file_name)
 
-  report.stopTimer()
   duplicates = clone_detection_algorithm.findDuplicateCode(source_files, report)
   for duplicate in duplicates:
     report.addClone(duplicate)

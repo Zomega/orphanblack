@@ -34,7 +34,6 @@ class Report:
     def __init__(self):
         self._error_info = []
         self._clones = []
-        self._timers = []
         self._file_names = []
         self._mark_to_statement_hash = None
 
@@ -54,19 +53,6 @@ class Report:
         def f(a, b):
             return cmp(b.getMaxCoveredLineNumbersCount(), a.getMaxCoveredLineNumbersCount())
         self._clones.sort(f)
-
-    def startTimer(self, descr):
-        self._timers.append([descr, time.time(), time.ctime()])
-        sys.stdout.flush()
-
-    def stopTimer(self, descr=''):
-        self._timers[-1][1] = time.time() - self._timers[-1][1]
-
-    def getTimerValues(self):
-        return self._timers
-
-    def getTotalTime(self):
-        return sum([i[1] for i in self.getTimerValues()])
 
 
 def writeReportToHTML(report, file_name):
@@ -244,15 +230,7 @@ clusterize_using_hash = %s<BR>
 clusterize_using_dcup = %s<BR>
 </P>
         """ % (len(report._file_names), ', <BR>'.join(report._file_names), len(report._clones), report.covered_source_lines_count, report.all_source_lines_count, (not report.all_source_lines_count and 100) or 100*report.covered_source_lines_count/float(report.all_source_lines_count), arguments.clustering_threshold, arguments.distance_threshold, arguments.size_threshold, arguments.hashing_depth, str(arguments.clusterize_using_hash), str(arguments.clusterize_using_dcup))
-        if True:
-            timings = ''
-            timings += '<B>Time elapsed</B><BR>'
-            timings += '<BR>\n'.join(['%s : %.2f seconds' % (i[0], i[1]) for i in report._timers])
-            timings += '<BR>\n Total time: %.2f' % (report.getTotalTime())
-            timings += '<BR>\n Started at: ' + report._timers[0][2]
-            timings += '<BR>\n Finished at: ' + report._timers[-1][2]
-        else:
-            timings = ''
+        timings = ''
 
         marks_report = ''
         if report._mark_to_statement_hash:

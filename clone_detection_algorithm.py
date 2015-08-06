@@ -281,12 +281,10 @@ def findDuplicateCode(source_files, report):
     if verbose:
         print 'Building statement hash...',
         sys.stdout.flush()
-    report.startTimer('Building statement hash')
     if arguments.clusterize_using_hash:
         hash_to_statement = build_hash_to_statement(dcup_hash=False)
     else:
         hash_to_statement = build_hash_to_statement(dcup_hash=True)
-    report.stopTimer()
     if verbose:
         print 'done'
         print 'Number of different hash values: ', len(hash_to_statement)
@@ -298,16 +296,12 @@ def findDuplicateCode(source_files, report):
         if verbose:
             print 'Building patterns...',
             sys.stdout.flush()
-        report.startTimer('Building patterns')
         clusters_map = build_unifiers(hash_to_statement)
-        report.stopTimer()
         if verbose:
             print Cluster.count, 'patterns were discovered'
             print 'Choosing pattern for each statement...',
             sys.stdout.flush()
-        report.startTimer('Marking similar statements')
         clusterize(hash_to_statement, clusters_map)
-        report.stopTimer()
         if verbose:
             print 'done'
 
@@ -333,17 +327,13 @@ def findDuplicateCode(source_files, report):
     if not arguments.force:
         statement_sequences = filterOutLongEquallyLabeledSequences(statement_sequences)
 
-    report.startTimer('Finding similar sequences of statements')
     duplicate_candidates = findHugeSequences()
-    report.stopTimer()
     if verbose:
         print len(duplicate_candidates), ' sequences were found'
         print 'Refining candidates...',
         sys.stdout.flush()
     if arguments.distance_threshold != -1:
-        report.startTimer('Refining candidates')
         clones = refineDuplicates(duplicate_candidates)
-        report.stopTimer()
     else:
         clones = duplicate_candidates
     if verbose:
