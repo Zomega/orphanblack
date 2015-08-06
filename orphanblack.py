@@ -76,7 +76,12 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
 '''
 
 
-@click.command()
+@click.group()
+def orphanblack_cli():
+    pass
+
+
+@orphanblack_cli.command()
 @click.option('-l', '--language',
               type=click.Choice(['python', 'java', 'lua', 'javascript', 'js']),
               default='python',
@@ -100,7 +105,7 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
-def orphanblack_cli(language, no_recursion, output_file_name, distance_threshold, hashing_depth, size_threshold, source_file_names):
+def scan(language, no_recursion, output_file_name, distance_threshold, hashing_depth, size_threshold, source_file_names):
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
@@ -167,12 +172,24 @@ def orphanblack_cli(language, no_recursion, output_file_name, distance_threshold
     report.addClone(duplicate)
   report.sortByCloneSize()
   try:
-    html_writer.new_write(report, output_file_name)
+    html_writer.write(report, output_file_name)
   except:
     print "catched error, removing output file"
     if os.path.exists(output_file_name):
       os.remove(output_file_name)
     raise
+
+
+@orphanblack_cli.command()
+def report():
+  """Reports results"""
+  print "REPORT"
+
+
+@orphanblack_cli.command()
+def html():
+  """Outputs a readable html page."""
+  print "WRITE TO HTML"
 
 if __name__ == '__main__':
   orphanblack_cli()

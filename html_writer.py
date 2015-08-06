@@ -30,7 +30,7 @@ env = Environment(
 template = env.get_template('template.html')
 
 
-def new_write(report, file_name):
+def write(report, file_name):
     percent_source_line_clones = (not report.all_source_lines_count and 100) or 100*report.covered_source_lines_count/float(report.all_source_lines_count)
     parameters = {
         'clustering_threshold': arguments.clustering_threshold,
