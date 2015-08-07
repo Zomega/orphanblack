@@ -63,26 +63,19 @@
         <br> clusterize_using_dcup = {{report.parameters.clusterize_using_dcup}}
         <br>
     </p>
-    {% for clone in report.clones %}<p><b>Clone # {{loop.index}}</b>
-        <br>Distance between two fragments = {{clone.calcDistance()}}
-        <br>Clone size = {{clone.calcSize()}}
+    {% for clone in report.clones %}<p><b>{{clone.name}}</b>
+        <br>Distance between two fragments = {{clone.distance}}
+        <br>Clone size = {{clone.size}}
         <table nowrap="" width="100%" max-width="100%" border="1">
             <tbody>
                 <tr>
-                    <td width="50%">Source file "{{clone[0].getSourceFile().getFileName()}}"
-                        <br>The first line is {{clone[0].getStartLineNumber() + 1}}</td>
-                    <td width="50%">Source file "{{clone[1].getSourceFile().getFileName()}}"
-                        <br>The first line is {{clone[1].getStartLineNumber() + 1}}</td>
+                    {% for snippet in clone.snippets %}<td width="50%">Source file "{{snippet.filename}}"
+                        <br>The first line is {{snippet.first_line}}</td>{% endfor %}
                 </tr>
                 <tr>
-                    <td width="50%">
-<pre>{% for line in clone[0].getSourceLines() %}{{line}}
-{% endfor %}</pre>
-                    </td>
-                    <td width="50%">
-<pre>{% for line in clone[1].getSourceLines() %}{{line}}
-{% endfor %}</pre>
-                    </td>
+                    {% for snippet in clone.snippets %}<td width="50%">
+<pre>{{snippet.text}}</pre>
+                    </td>{% endfor %}
                 </tr>
             </tbody>
         </table>

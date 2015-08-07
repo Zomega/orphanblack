@@ -22,12 +22,14 @@ import sys
 import os
 import traceback
 import click
+import pickle  # TODO: THIS IS A SECURITY RISK. Make JSON based version.
+from tabulate import tabulate
 
 import ast_suppliers
 import clone_detection_algorithm
 
 from parameters import Parameters
-from report import Report
+from report import Report, CloneSummary, Snippet
 import html_writer
 
 # TODO: Incorprate into CLI?
@@ -88,12 +90,6 @@ def orphanblack_cli():
               default='python',
               help="The language of the provided files.")
 @click.option('--no-recursion', is_flag=True)
-@click.option('-o', '--output',
-              'output_file_name',
-              type=click.Path(),
-              default='output.html',
-              help="An HTML report will be written to this file. \
-                    Defaults to output.html")
 @click.option('--distance-threshold',
               type=int,
               default=None)  # TODO: Help
@@ -106,7 +102,7 @@ def orphanblack_cli():
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
-def scan(language, no_recursion, output_file_name, distance_threshold, hashing_depth, size_threshold, source_file_names):
+def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, source_file_names):
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
@@ -163,7 +159,7 @@ def scan(language, no_recursion, output_file_name, distance_threshold, hashing_d
 
   for file_name in source_file_names:
     if os.path.isdir(file_name):
-      if arguments.no_recursion:
+      if no_recursion:
         dirpath = file_name
         files = [os.path.join(file_name, f) for f in os.listdir(file_name)
                  if os.path.splitext(f)[1][1:] == supplier.extension]
@@ -177,28 +173,64 @@ def scan(language, no_recursion, output_file_name, distance_threshold, hashing_d
       parse_file(file_name)
 
   duplicates = clone_detection_algorithm.findDuplicateCode(source_files, report)
+  n = 1
   for duplicate in duplicates:
-    report.addClone(duplicate)
+    distance = duplicate.calcDistance()
+    summary = CloneSummary(
+      "Clone #"+str(n),
+      [  # TODO: This is a mess! Most of this info should be assembled on the fly and in memeber functions.
+       Snippet(
+        duplicate[i].getSourceFile()._file_name,
+        duplicate[i].getCoveredLineNumbers(),
+        '\n'.join([line for line in duplicate[0].getSourceLines()])
+        ) for i in [0, 1]], distance)
+    report.addClone(summary)
+    n += 1
   report.sortByCloneSize()
-  try:
-    html_writer.write(report, output_file_name)
-  except:
-    print "catched error, removing output file"
-    if os.path.exists(output_file_name):
-      os.remove(output_file_name)
-    raise
+
+  with open(".orphanblack", "wb") as f:
+    pickle.dump(report, f)
 
 
 @orphanblack_cli.command()
-def report():
-  """Reports results"""
-  print "REPORT"
+@click.option('-v', '--verbose', is_flag=True)
+def report(verbose):
+  with open(".orphanblack", "r") as f:
+    report = pickle.load(f)
+  for clone in report.clones:
+    print clone.name
+    print "="*len(clone.name)
+    print "Distance between two fragments =", clone.distance
+    print "Clone size =", clone.size
+
+    def rangify(lines):
+      return str(min(lines)) + ' through ' + str(max(lines))
+
+    table = [[snippet.filename, str(snippet.first_line) + ' through ' + str(snippet.last_line)] for snippet in clone.snippets]
+    print tabulate(table, headers=["File", "Lines"], tablefmt="fancy_grid")
+    if verbose:
+      for snippet in clone.snippets:
+        print ''
+        title = snippet.filename + ":" + str(snippet.first_line) + "-" + str(snippet.last_line)
+        print "*"+"="*len(title)+"*"
+        print "|"+title+"|"
+        print "*"+"="*len(title)+"*"
+        print snippet.text
+    print '\n\n'
 
 
 @orphanblack_cli.command()
-def html():
+@click.option('-o', '--output',
+              'output_file_name',
+              type=click.Path(),
+              default='output.html',
+              help="An HTML report will be written to this file. \
+                    Defaults to output.html")
+def html(output_file_name):
   """Outputs a readable html page."""
-  print "WRITE TO HTML"
+  with open(".orphanblack", "r") as f:
+    report = pickle.load(f)
+  html_writer.write(report, output_file_name)
 
 if __name__ == '__main__':
   orphanblack_cli()
