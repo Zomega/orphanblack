@@ -197,6 +197,7 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
 def report(verbose):
   with open(".orphanblack", "r") as f:
     report = pickle.load(f)
+  print "Found", len(report.clones), "clones.\n\n"
   for clone in report.clones:
     print clone.name
     print "="*len(clone.name)
@@ -231,6 +232,63 @@ def html(output_file_name):
   with open(".orphanblack", "r") as f:
     report = pickle.load(f)
   html_writer.write(report, output_file_name)
+
+# This portion of the CLI implements copyright and liscense notices in line
+# with the GNU GPL3 best practices. It is not a replacement for LICENSE.txt.
+
+copyright_message = """
+orphanblack is a refactor (derivative work) of clonedigger
+
+orphanblack   Copyright (C) 2015 Will Oursler
+clonedigger   Copyright (C) 2008 Peter Bulychev
+
+orphanblack comes with ABSOLUTELY NO WARRANTY; for details type `show warranty'.
+
+This is free software, and you are welcome to redistribute it under certain
+conditions; see LICENSE.txt for details.
+"""
+
+warranty_message = """
+orphanblack is licensed under the GNU GPL 3.
+
+As such, there is no warranty for the program, to the extent permitted by
+applicable law.  Except when otherwise stated in writing the copyright
+holders and/or other parties provide the program "as is" without warranty
+of any kind, either expressed or implied, including, but not limited to,
+the implied warranties of merchantability and fitness for a particular
+purpose.  The entire risk as to the quality and performance of the program
+is with you.  Should the program prove defective, you assume the cost of
+all necessary servicing, repair or correction.
+
+In no event unless required by applicable law or agreed to in writing
+will any copyright holder, or any other party who modifies and/or conveys
+the program as permitted above, be liable to you for damages, including any
+general, special, incidental or consequential damages arising out of the
+use or inability to use the program (including but not limited to loss of
+data or data being rendered inaccurate or losses sustained by you or third
+parties or a failure of the program to operate with any other programs),
+even if such holder or other party has been advised of the possibility of
+such damages.
+
+For more details, see the full license, which should have been distributed
+with this software as "LICENSE.txt".
+"""
+
+
+@orphanblack_cli.group()
+def show():
+  pass
+
+
+@show.command()
+def copyright():
+  print copyright_message
+
+
+@show.command()
+def warranty():
+  print warranty_message
+
 
 if __name__ == '__main__':
   orphanblack_cli()
