@@ -15,6 +15,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Clone Digger.  If not, see <http://www.gnu.org/licenses/>.
 
+# TODO: JESUS. How many files like this are there?
+
 import sys
 
 import suffix_tree

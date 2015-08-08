@@ -3,11 +3,13 @@
 Currently for Python only, with plans to extend to C++, Java and more!
 
 ## Installation
-At the moment, the code and dependancies must be installed manually. The eventual goal is to register this package with PyPI so that installation is as simple as
+I think things are set up with PyPI such that
 
 ```
 $ pip install orphanblack
 ```
+
+should work. Because the software is in the early days, and this is my first python package, please forgive me if there are a few kinks.
 
 ## Usage
 `orphanblack` is a complex tool with plenty of settings under the hood for both processing and display. Sensible defaults are used whenever possible. To get started, the following will analyse a single python module for clones.
@@ -35,7 +37,8 @@ If no destination is specified, `orphanblack` will use `output.html` in the curr
 
 
 ## API
-TODO
+
+Not yet done, but on the way... for now, check out the Report class (`orphanblack/report.py`) which summarizes the results and should be fairly stable.
 
 ## Code Genealogy (How `orphanblack` Came To Be)
 `orphanblack` is a direct code descendant of a [2008 package called `clonedigger`](http://clonedigger.sourceforge.net). I first stumbled on `clonedigger` in 2012 when examining other static analysis tools for python like pep8 and pyflakes, and really liked the concept. Sadly, I found the original code unusable for my purposes. I adapted the code several times in the intervening years, but always with limited success because of the convoluted inner workings of the package.
@@ -57,6 +60,10 @@ Because `clonedigger` is distributed under GPL3, I am forced to also use GPL3 in
 * Grouping clones! Right now, if three regions of code are all similar to each other, three seperate clone reports, corresponding to each pair, are generated.
 * An API, allowing integration with other linters and plugins.
 * Other languages: So much of this work is already done. After just a little bit of internal rewriting, any language should be able to work with `orphanblack` just by providing an appropriate AST parser.
+* Total internal rewrite, aiming for a well commented codebase.
+* Diffs based on anti-unification patterns.
+* ASTNode classes with built in anti-unification utilities
+* Ability to handle sequences elegantly (i.e. deal with insertion / removal in edit distances)
 
 ### An Incomplete List of Features Removed (and Reasons):
 * Removed timing and profiling tools: Profiling is great, but there are dedicated python profiling tools avalible.
