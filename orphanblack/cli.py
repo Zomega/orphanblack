@@ -33,6 +33,7 @@ from report import Report, CloneSummary, Snippet
 import html_writer
 
 # TODO: Incorprate into CLI?
+# TODO: Rewrite CLI as calls to API, once API exists.
 """To run Clone Digger type:
 python clonedigger.py [OPTION]... [SOURCE FILE OR DIRECTORY]...
 

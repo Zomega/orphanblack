@@ -1,4 +1,9 @@
 *.pyc
 *.html
+.DS_Store
 *.DS_Store
 *.orphanblack
+
+# Setuptools / PyPI Packaging and Upload stuff...
+dist/
+MANIFEST
