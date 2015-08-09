@@ -179,11 +179,11 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
     distance = duplicate.calcDistance()
     summary = CloneSummary(
       "Clone #"+str(n),
-      [  # TODO: This is a mess! Most of this info should be assembled on the fly and in memeber functions.
+      [  # TODO: This is a mess! Most of this info should be assembled on the fly and in member functions.
        Snippet(
         duplicate[i].getSourceFile()._file_name,
         duplicate[i].getCoveredLineNumbers(),
-        '\n'.join([line for line in duplicate[0].getSourceLines()])
+        '\n'.join([line for line in duplicate[i].getSourceLines()])
         ) for i in [0, 1]], distance)
     report.addClone(summary)
     n += 1
