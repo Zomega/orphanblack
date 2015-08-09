@@ -3,10 +3,10 @@
 
 pandoc --from=markdown_github --to=rst --output=README.rst README.md
 
-python setup.py register -r pypitest
+python setup.py register -r test
 
 # TODO: Confirm upload...
 
-python setup.py sdist upload -r pypitest
+python setup.py sdist upload -r test
 
 rm README.rst

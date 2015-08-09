@@ -14,13 +14,13 @@ setup(
     "tabulate",
     "click"
     ],  # TODO: versioning info?
-  version='0.1.4',
+  version='0.1.6',
   description='Static Analysis for Software Clone Detection',
   long_description=long_description,
   author='Will Oursler',
   author_email='woursler@gmail.com',
   url='https://github.com/Zomega/orphanblack',
-  download_url='https://github.com/Zomega/orphanblack/tarball/0.1',
+  download_url='https://github.com/Zomega/orphanblack/tarball/0.1.6',
   keywords=['testing', 'clone', 'static analysis', 'clonedigger', 'buildbot'],
   classifiers=[],
   entry_points={

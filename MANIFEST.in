@@ -1,0 +1,7 @@
+include *.txt
+recursive-include orphanblack *.g
+recursive-include orphanblack/templates *.html
+recursive-include orphanblack *.jar
+recursive-include orphanblack *.java
+recursive-include orphanblack *.tokens
+recursive-include orphanblack *.txt
