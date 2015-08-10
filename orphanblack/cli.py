@@ -90,7 +90,6 @@ def orphanblack_cli():
               type=click.Choice(['python', 'java', 'lua', 'javascript', 'js']),
               default='python',
               help="The language of the provided files.")
-@click.option('--no-recursion', is_flag=True)
 @click.option('--distance-threshold',
               type=int,
               default=None)  # TODO: Help
@@ -100,9 +99,11 @@ def orphanblack_cli():
 @click.option('--size-threshold',
               type=int,
               default=None)  # TODO: Help
+# These options / arguments determine which files will be scanned.
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
+@click.option('--no-recursion', is_flag=True)
 def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, source_file_names):
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
