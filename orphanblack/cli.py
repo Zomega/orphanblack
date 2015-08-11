@@ -59,9 +59,6 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
   cmdline.add_option('--fast',
              action='store_true', dest='clusterize_using_hash',
              help='find only clones, which differ in variable and function names and constants')
-  cmdline.add_option('--ignore-dir',
-             action='append', dest='ignore_dirs',
-             help='exclude directories from parsing')
   cmdline.add_option('--report-unifiers',
              action='store_true', dest='report_unifiers',
              help='')
@@ -69,8 +66,6 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
              action='store',
              dest='f_prefixes',
              help='skip functions/methods with these prefixes (provide a CSV string as argument)')
-  cmdline.add_option('--file-list', dest='file_list',
-             help='a file that contains a list of file names that must be processed by Clone Digger')
 
 ######################
 

@@ -9,6 +9,7 @@ import logging
 
 # TODO: Explicit exclusion / inclusion.
 # TODO: Explicit-* warnings.
+# TODO: Use shlex?
 
 
 class Pattern:
