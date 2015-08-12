@@ -20,6 +20,7 @@
 import sys
 
 import os
+import logging
 import traceback
 import click
 import logging
@@ -28,6 +29,7 @@ from tabulate import tabulate
 import ast_suppliers
 import clone_detection_algorithm
 
+import manifest
 from parameters import Parameters
 from report import Report, CloneSummary, Snippet, save_report, load_report
 import html_writer
@@ -59,9 +61,6 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
   cmdline.add_option('--fast',
              action='store_true', dest='clusterize_using_hash',
              help='find only clones, which differ in variable and function names and constants')
-  cmdline.add_option('--ignore-dir',
-             action='append', dest='ignore_dirs',
-             help='exclude directories from parsing')
   cmdline.add_option('--report-unifiers',
              action='store_true', dest='report_unifiers',
              help='')
@@ -69,8 +68,6 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
              action='store',
              dest='f_prefixes',
              help='skip functions/methods with these prefixes (provide a CSV string as argument)')
-  cmdline.add_option('--file-list', dest='file_list',
-             help='a file that contains a list of file names that must be processed by Clone Digger')
 
 ######################
 
@@ -90,7 +87,6 @@ def orphanblack_cli():
               type=click.Choice(['python', 'java', 'lua', 'javascript', 'js']),
               default='python',
               help="The language of the provided files.")
-@click.option('--no-recursion', is_flag=True)
 @click.option('--distance-threshold',
               type=int,
               default=None)  # TODO: Help
@@ -100,10 +96,17 @@ def orphanblack_cli():
 @click.option('--size-threshold',
               type=int,
               default=None)  # TODO: Help
+# These options / arguments determine which files will be scanned.
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
-def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, source_file_names):
+@click.option('--no-recursion', is_flag=True)  # TODO: Is this meaningful?
+@click.option('--file-manifest',
+              type=click.Path(exists=True),
+              default=None,
+              help="The file manifest (formatted like a PyPI MANIFEST.in)\
+              describes which files should be scanned.")
+def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, file_manifest, source_file_names):
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
@@ -118,33 +121,25 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
     parameters.size_threshold = supplier.size_threshold
   else:
     parameters.size_threshold = size_threshold
+  # TODO: Configuration files!
 
   source_files = []
   source_file_names = list(source_file_names)
+  if file_manifest is not None:
+    source_file_names += list(manifest.contents(file_manifest))
 
   report = Report(parameters)
 
-  ####### TODO: MAKE FILE LIST
-  ####### TODO: Populate parameters
-  #for option in cmdline.option_list:
-  #  if option.dest == 'file_list' and options.file_list is not None:
-  #    source_file_names.extend(open(options.file_list).read().split())
-  #    continue
-  #  elif option.dest is None:
-  #    continue
-  #  setattr(arguments, option.dest, getattr(options, option.dest))
-  ########
-
   def parse_file(file_name):
     try:
-      print 'Parsing ', file_name, '...',
+      logging.info('Parsing ' + file_name + '...')
       sys.stdout.flush()
       source_file = supplier(file_name, parameters)
       source_file.getTree().propagateCoveredLineNumbers()
       source_file.getTree().propagateHeight()
       source_files.append(source_file)
       report.addFileName(file_name)
-      print 'done'
+      logging.info('done')
     except:
       s = 'Can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc()
       logging.warn(s)
