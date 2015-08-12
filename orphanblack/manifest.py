@@ -72,6 +72,14 @@ class ManifestFilter:
   def check(self, filepath):
     raise NotImplementedError("ManifestFilter Subclasses must be able to filter files.")
 
+  @property
+  def explicitly_included_files(self):
+    return set()
+
+  @property
+  def explicitly_excluded_files(self):
+    return set()
+
 
 class CompositeFilter(ManifestFilter):
   def __init__(self, mfilters):
@@ -91,6 +99,14 @@ class CompositeFilter(ManifestFilter):
 
   def __repr__(self):
     return "COMPOSITE[\n" + "\n".join([repr(mfilter) for mfilter in self.mfilters]) + "\n]"
+
+  @property
+  def explicitly_included_files(self):
+    return set.union(*[mfilter.explicitly_included_files for mfilter in self.mfilters])
+
+  @property
+  def explicitly_excluded_files(self):
+    return set.union(*[mfilter.explicitly_excluded_files for mfilter in self.mfilters])
 
 
 def build_CompositeFilter(mfilters, error_context):
@@ -114,6 +130,14 @@ class NegatedFilter(ManifestFilter):
 
   def __repr__(self):
     return "EXCLUDE " + repr(self.mfilter)
+
+  @property
+  def explicitly_included_files(self):
+    return self.mfilter.explicitly_excluded_files
+
+  @property
+  def explicitly_excluded_files(self):
+    return self.mfilter.explicitly_included_files
 
 
 def negated_builder(builder):
@@ -140,7 +164,7 @@ class PatternFilter(ManifestFilter):
     return None
 
   def __repr__(self):
-    s = "matches " + repr(self.pattern) + " from " + self.rootdir
+    s = "MATCH " + repr(self.pattern) + " from " + self.rootdir
     if self.recursive:
       s += " or a subdirectory"
     s += "."
@@ -192,6 +216,49 @@ def build_GlobalIncludeFilter(args, rootdir, error_context):
 build_GlobalExcludeFilter = negated_builder(build_GlobalIncludeFilter)
 
 
+class ExplictMatchFilter(ManifestFilter):
+  def __init__(self, filepath):
+    self.filepath = filepath
+
+  def check(self, filepath):
+    if filepath == self.filepath:
+      return True
+    return None
+
+  def __repr__(self):
+    return "EXPLICITLY INCLUDE " + self.filepath + " ."
+
+  @property
+  def explicitly_included_files(self):
+    return set([self.filepath])
+
+
+def build_ExplicitIncludeFilter(args, rootdir, error_context):
+  if len(args) == 0:
+    logging.warn("In File Manifest \"" + error_context['filename']
+                 + "\" on line " + str(error_context['line_number']) + " : "
+                 + "The \"" + error_context['command']
+                 + "\" command requires at least one filename.")
+  mfilters = []
+  for filename in args:
+    filepath = os.path.join(rootdir, filename)
+    # TODO: Ensure this file exists, if not issue warning.
+    if not is_file(filepath):
+      logging.warn("In File Manifest \"" + error_context['filename']
+                   + "\" on line " + str(error_context['line_number']) + " : "
+                   + " " + filename + " is not a file!"
+                   + " This \"" + error_context['command']
+                   + "\" will be ignored.")
+      continue
+    mfilters.append(ExplictMatchFilter(filepath))
+
+  # Note that since PatternFilters don't return False, this is basically
+  # an OR operation over the filters.
+  return build_CompositeFilter(mfilters, error_context)
+
+build_ExplicitExcludeFilter = negated_builder(build_ExplicitIncludeFilter)
+
+
 class GraftFilter(ManifestFilter):
   def __init__(self, dir):
     self.dir = dir
@@ -237,8 +304,8 @@ build_PruneFilter = negated_builder(build_GraftFilter)
 command_builders = {
   'include': build_IncludeFilter,
   'exclude': build_ExcludeFilter,
-  'explicit-include': None,
-  'explicit-exclude': None,
+  'explicit-include': build_ExplicitIncludeFilter,
+  'explicit-exclude': build_ExplicitExcludeFilter,
   'recursive-include': build_RecursiveIncludeFilter,
   'recursive-exclude': build_RecursiveExcludeFilter,
   'global-include': build_GlobalIncludeFilter,
@@ -305,6 +372,7 @@ def contents(manifest_filename, rootdir=None):
 
   manifest_filter = parse_manifest(manifest_filename, rootdir)
   print manifest_filter
+  print manifest_filter.explicitly_included_files
 
   for root, dirnames, filenames in os.walk(rootdir):
     for filename in filenames:
