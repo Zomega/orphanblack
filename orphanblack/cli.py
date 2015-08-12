@@ -20,6 +20,7 @@
 import sys
 
 import os
+import logging
 import traceback
 import click
 import pickle  # TODO: THIS IS A SECURITY RISK. Make JSON based version.
@@ -28,6 +29,7 @@ from tabulate import tabulate
 import ast_suppliers
 import clone_detection_algorithm
 
+import manifest
 from parameters import Parameters
 from report import Report, CloneSummary, Snippet
 import html_writer
@@ -98,8 +100,13 @@ def orphanblack_cli():
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
-@click.option('--no-recursion', is_flag=True)
-def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, source_file_names):
+@click.option('--no-recursion', is_flag=True)  # TODO: Is this meaningful?
+@click.option('--file-manifest',
+              type=click.Path(exists=True),
+              default=None,
+              help="The file manifest (formatted like a PyPI MANIFEST.in)\
+              describes which files should be scanned.")
+def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, file_manifest, source_file_names):
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
@@ -114,33 +121,25 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
     parameters.size_threshold = supplier.size_threshold
   else:
     parameters.size_threshold = size_threshold
+  # TODO: Configuration files!
 
   source_files = []
   source_file_names = list(source_file_names)
+  if file_manifest is not None:
+    source_file_names += list(manifest.contents(file_manifest))
 
   report = Report(parameters)
 
-  ####### TODO: MAKE FILE LIST
-  ####### TODO: Populate parameters
-  #for option in cmdline.option_list:
-  #  if option.dest == 'file_list' and options.file_list is not None:
-  #    source_file_names.extend(open(options.file_list).read().split())
-  #    continue
-  #  elif option.dest is None:
-  #    continue
-  #  setattr(arguments, option.dest, getattr(options, option.dest))
-  ########
-
   def parse_file(file_name):
     try:
-      print 'Parsing ', file_name, '...',
+      logging.info('Parsing ' + file_name + '...')
       sys.stdout.flush()
       source_file = supplier(file_name, parameters)
       source_file.getTree().propagateCoveredLineNumbers()
       source_file.getTree().propagateHeight()
       source_files.append(source_file)
       report.addFileName(file_name)
-      print 'done'
+      logging.info('done')
     except:
       s = 'Error: can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc()
       report.addErrorInformation(s)

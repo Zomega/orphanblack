@@ -31,6 +31,9 @@ class Pattern:
         return False
     return True
 
+  def __repr__(self):
+    return "/".join(self.p_tokens)
+
 
 def is_file(path):
   return os.path.isfile(path)
@@ -86,6 +89,17 @@ class CompositeFilter(ManifestFilter):
         included = False
     return included
 
+  def __repr__(self):
+    return "COMPOSITE[\n" + "\n".join([repr(mfilter) for mfilter in self.mfilters]) + "\n]"
+
+
+def build_CompositeFilter(mfilters, error_context):
+  if len(mfilters) == 0:
+    return None  # TODO: DEBUG level message?
+  if len(mfilters) == 1:
+    return mfilters[0]
+  return CompositeFilter(mfilters)
+
 
 # The logical inverse of whatever filter is passed in.
 class NegatedFilter(ManifestFilter):
@@ -97,6 +111,9 @@ class NegatedFilter(ManifestFilter):
     if inverse_result is None:
       return None
     return not inverse_result
+
+  def __repr__(self):
+    return "EXCLUDE " + repr(self.mfilter)
 
 
 def negated_builder(builder):
@@ -122,6 +139,13 @@ class PatternFilter(ManifestFilter):
       return True
     return None
 
+  def __repr__(self):
+    s = "matches " + repr(self.pattern) + " from " + self.rootdir
+    if self.recursive:
+      s += " or a subdirectory"
+    s += "."
+    return s
+
 
 def build_IncludeFilter(args, rootdir, error_context, recursive=False):
   if len(args) == 0:
@@ -136,7 +160,7 @@ def build_IncludeFilter(args, rootdir, error_context, recursive=False):
 
   # Note that since PatternFilters don't return False, this is basically
   # an OR operation over the filters.
-  return CompositeFilter(mfilters)
+  return build_CompositeFilter(mfilters, error_context)
 
 build_ExcludeFilter = negated_builder(build_IncludeFilter)
 
@@ -163,7 +187,7 @@ build_RecursiveExcludeFilter = negated_builder(build_RecursiveIncludeFilter)
 
 
 def build_GlobalIncludeFilter(args, rootdir, error_context):
-  build_IncludeFilter(args, rootdir, error_context, recursive=True)
+  return build_IncludeFilter(args, rootdir, error_context, recursive=True)
 
 build_GlobalExcludeFilter = negated_builder(build_GlobalIncludeFilter)
 
@@ -176,6 +200,9 @@ class GraftFilter(ManifestFilter):
     if is_subpath(filepath, self.dir):
       return True
     return None
+
+  def __repr__(self):
+    return "everything below " + self.dir + " ."
 
 
 def build_GraftFilter(args, rootdir, error_context):
@@ -260,7 +287,7 @@ def parse_manifest(filename, rootdir):
         # Notice that this preseves the order of the lines in the file.
         filters.append(manifest_filter)
 
-    return CompositeFilter(filters)
+    return build_CompositeFilter(filters, None)
 
   except IOError:
     logging.error("Unable to open file manifest from \"" + filename + "\".")
@@ -277,6 +304,7 @@ def contents(manifest_filename, rootdir=None):
       sys.exit(1)
 
   manifest_filter = parse_manifest(manifest_filename, rootdir)
+  print manifest_filter
 
   for root, dirnames, filenames in os.walk(rootdir):
     for filename in filenames:
