@@ -22,14 +22,13 @@ import sys
 import os
 import traceback
 import click
-import pickle  # TODO: THIS IS A SECURITY RISK. Make JSON based version.
 from tabulate import tabulate
 
 import ast_suppliers
 import clone_detection_algorithm
 
 from parameters import Parameters
-from report import Report, CloneSummary, Snippet
+from report import Report, CloneSummary, Snippet, save_report, load_report
 import html_writer
 
 # TODO: Incorprate into CLI?
@@ -189,15 +188,15 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
     n += 1
   report.sortByCloneSize()
 
-  with open(".orphanblack", "wb") as f:
-    pickle.dump(report, f)
+  save_report(".orphanblack", report)
+  #with open(".orphanblack", "wb") as f:
+  #  pickle.dump(report, f)
 
 
 @orphanblack_cli.command()
 @click.option('-v', '--verbose', is_flag=True)
 def report(verbose):
-  with open(".orphanblack", "r") as f:
-    report = pickle.load(f)
+  report = load_report('.orphanblack')
   print "Found", len(report.clones), "clones.\n\n"
   for clone in report.clones:
     print clone.name
@@ -230,8 +229,7 @@ def report(verbose):
                     Defaults to output.html")
 def html(output_file_name):
   """Outputs a readable html page."""
-  with open(".orphanblack", "r") as f:
-    report = pickle.load(f)
+  report = load_report('.orphanblack')
   html_writer.write(report, output_file_name)
 
 # This portion of the CLI implements copyright and liscense notices in line
