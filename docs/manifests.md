@@ -57,18 +57,21 @@ So long as the manifest is parsed correctly, then only warnings will be issued. 
 * Any command uses a file where a directory was expected or vice versa.
 * An explicitly included file is later excluded for any reason or vice versa.
 
+TODO: Implement that last one.
+
 ### Default File Manifests
 
-`orphanblack` comes packaged with a number of default manifests for common situations. In particular, every supported language has a default manifest that will be used if neither a manifest of an explicit list of files is provided. For instance, if `orphanblack scan` is run with `-l python`, then
-
-
-TODO
+`orphanblack` comes packaged with a number of default manifests for common situations. In particular, every supported language has a default manifest that will be used if neither a manifest of an explicit list of files is provided. For instance, if `orphanblack scan` is run with `-l python`, then unless filenames are explicitly specified or a manifest is provided, the default `PYTHON_MANIFEST` will be used. This file contains the single rule
 
 ```
-recursive-include *.py
+global-include *.py
 ```
+
+TODO: Implement
 
 ## AST Manifests
+
+*NOTE: This section describes a feature that will be implemented in future versions. Actual support may be buggy or nonexistent.*
 
 Unlike file manifests, AST manifests include everything by default. Their primary purpose is to exclude analysis of classes and files by name.
 

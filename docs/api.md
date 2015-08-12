@@ -1,3 +1,5 @@
+*NOTE: This section describes a feature that will be implemented in future versions. Actual support may be buggy or nonexistent.*
+
 # Client API
 
 The Client API has two major purposes:

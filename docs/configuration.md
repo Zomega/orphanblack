@@ -1,3 +1,5 @@
+*NOTE: This section describes a feature that will be implemented in future versions. Actual support may be buggy or nonexistent.*
+
 # Locations
 
 The default behavior can be overridden through the use of configuration files. By default, `orphanblack` will check to see if a `.orphanblackrc` file is present in the current working directory. If no such file is present it will check to see if `~/.orphanblackrc` file exists (henceforth refered to as user defaults). Otherwise, `orphanblack` will pick sensible defaults (program defaults).

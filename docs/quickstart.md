@@ -12,7 +12,7 @@ should be perfectly servicable, though an installation from source will also wor
 
 ```
 $ cd path/to/my/python/program
-$ orphanblack scan
+$ orphanblack scan *.py
 $ orphanblack report
 ```
 

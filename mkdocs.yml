@@ -9,10 +9,11 @@ pages:
 - Home: index.md
 - Quick Start: quickstart.md
 - User Guide:
-    - Command Line Interface: cli.md
-    - Manifests: manifests.md
-    - Configuration Files: configuration.md
-- API: api.md
+  - Command Line Interface: cli.md
+  - Manifests: manifests.md
+  - Configuration Files: configuration.md
+- Developer Guide:
+  - API: api.md
 - FAQ: faq.md
 
 theme: readthedocs
