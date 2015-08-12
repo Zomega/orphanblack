@@ -371,8 +371,6 @@ def contents(manifest_filename, rootdir=None):
       sys.exit(1)
 
   manifest_filter = parse_manifest(manifest_filename, rootdir)
-  print manifest_filter
-  print manifest_filter.explicitly_included_files
 
   for root, dirnames, filenames in os.walk(rootdir):
     for filename in filenames:

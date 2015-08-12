@@ -34,6 +34,9 @@ from parameters import Parameters
 from report import Report, CloneSummary, Snippet, save_report, load_report
 import html_writer
 
+# TODO: configure with flags stuff, copy to logs...
+# logging.basicConfig(level=logging.DEBUG)
+
 # TODO: Incorprate into CLI?
 # TODO: Rewrite CLI as calls to API, once API exists.
 """To run Clone Digger type:
