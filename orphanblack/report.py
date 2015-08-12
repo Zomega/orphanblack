@@ -1,12 +1,9 @@
-# TODO: report serialization without pickle because that's insecure.
-
 import textwrap
 import json
 
 from parameters import Parameters
 
 
-# TODO: TEXT OF FILES!
 class Snippet:
   def __init__(self, filename, lines, text):
     def deindent(string):
@@ -45,7 +42,6 @@ class CloneSummary:
 class Report:
   def __init__(self, parameters, clones=[], filenames=[]):
     self._parameters = parameters
-    self._error_info = []  # TODO: Move this to logging.
     self._clones = clones
     self._file_names = filenames
     self._mark_to_statement_hash = None
@@ -67,9 +63,6 @@ class Report:
 
   def addFileName(self, file_name):
     self._file_names.append(file_name)
-
-  def addErrorInformation(self, error_info):
-    self._error_info.append(error_info)
 
   def addClone(self, clone):
     self._clones.append(clone)
@@ -132,7 +125,7 @@ def load_report(filename):
   def load_snippet(json_snippet):
     return Snippet(
       json_snippet['filename'],
-      json_snippet['lines'],
+      set(json_snippet['lines']),
       json_snippet['text'])
 
   def load_clone(json_clone):

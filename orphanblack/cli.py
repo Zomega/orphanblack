@@ -22,6 +22,7 @@ import sys
 import os
 import traceback
 import click
+import logging
 from tabulate import tabulate
 
 import ast_suppliers
@@ -145,9 +146,8 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
       report.addFileName(file_name)
       print 'done'
     except:
-      s = 'Error: can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc()
-      report.addErrorInformation(s)
-      print s
+      s = 'Can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc()
+      logging.warn(s)
 
   def walk(dirname):
     for dirpath, dirs, files in os.walk(file_name):
