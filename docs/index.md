@@ -11,7 +11,7 @@ As a result, it's valuble to at least be aware of what clones exist in your soft
 `orphanblack` aims to fill this gap in linting software by providing a detector that is expandable while being simple enough to comprehend and integrate in a weekend.
 
 ## Code Genealogy (How `orphanblack` Came To Be)
-`orphanblack` is a direct code descendant of a [2008 package called `clonedigger`](http://clonedigger.sourceforge.net). I first stumbled on `clonedigger` in 2012 when examining other static analysis tools for python like pep8 and pyflakes, and really liked the concept. Sadly, I found the original code unusable for my purposes. I adapted the code several times in the intervening years, but always with limited success because of the convoluted inner workings of the package.
+`orphanblack` is a direct code descendant of a [2008 package called `clonedigger`](http://clonedigger.sourceforge.net). I first stumbled on `clonedigger` in 2012 when examining other static analysis tools for python like `pep8` and `pyflakes`, and really liked the concept. Sadly, I found the original code unusable for my purposes. I adapted the code several times in the intervening years, but always with limited success because of the convoluted inner workings of the package.
 
 In the early summer of 2015, I switched to a new computer, inadvertantly deleting many of my modifications. I decided to bite the bullet and attempt a total refactor into something I found more palatable. I also wanted to create something that could play nicely with Sublime Text; a tool that could automatically run on every project -- python or otherwise -- I worked on. `orphanblack`, nicknamed after the clone-based BBC America series, is the result of my progress towards those goals.
 

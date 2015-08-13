@@ -6,7 +6,7 @@ The default behavior can be overridden through the use of configuration files. B
 
 Any other file can be specified with the `--configuration <filename>` flag.
 
-If `~/.orphanblack` exists, but should not be used for a particular run, there is a `--use-program-defaults` flag that will override all other settings (including `--configuration`).
+If `~/.orphanblackrc` exists, but should not be used for a particular run, there is a `--use-program-defaults` flag that will override all other settings (including `--configuration`).
 
 ## Format
 

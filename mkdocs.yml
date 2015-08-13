@@ -15,6 +15,7 @@ pages:
 - Developer Guide:
   - API: api.md
 - FAQ: faq.md
+- Change Log: changelog.md
 
 theme: readthedocs
 
