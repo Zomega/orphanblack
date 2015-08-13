@@ -23,7 +23,6 @@ import os
 import logging
 import traceback
 import click
-import logging
 from tabulate import tabulate
 
 import ast_suppliers
@@ -52,33 +51,6 @@ Notice:
 The semantics of threshold options is discussed in the paper "Duplicate code detection using anti-unification", which can be downloaded from the site http://clonedigger.sourceforge.net . All arguments are optional. Supported options are:
 """
 
-# TODO: Remaining stuff... Add or replace functionality with .files
-# TODO: Removing prefix banning for now.
-'''
-  cmdline.add_option('-f', '--force',
-             action='store_true', dest='force',
-             help='')
-  cmdline.add_option('--force-diff',
-             action='store_true', dest='use_diff',
-             help='force highlighting of differences based on the diff algorithm')
-  cmdline.add_option('--fast',
-             action='store_true', dest='clusterize_using_hash',
-             help='find only clones, which differ in variable and function names and constants')
-  cmdline.add_option('--report-unifiers',
-             action='store_true', dest='report_unifiers',
-             help='')
-  cmdline.add_option('--func-prefixes',
-             action='store',
-             dest='f_prefixes',
-             help='skip functions/methods with these prefixes (provide a CSV string as argument)')
-
-######################
-
-@click.option('--clusterize-using-dcup',
-              is_flag=True,
-              help="Mark each statement with its D-cup value instead of the most similar pattern.")
-'''
-
 
 @click.group()
 def orphanblack_cli():
@@ -90,53 +62,35 @@ def orphanblack_cli():
               type=click.Choice(['python', 'java', 'lua', 'javascript', 'js']),
               default='python',
               help="The language of the provided files.")
-@click.option('--distance-threshold',
-              type=int,
-              default=None)  # TODO: Help
-@click.option('--hashing-depth',
-              type=int,
-              default=None)  # TODO: Help
-@click.option('--size-threshold',
-              type=int,
-              default=None)  # TODO: Help
 # These options / arguments determine which files will be scanned.
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
-@click.option('--no-recursion', is_flag=True)  # TODO: Is this meaningful?
 @click.option('--file-manifest',
               type=click.Path(exists=True),
               default=None,
               help="The file manifest (formatted like a PyPI MANIFEST.in)\
               describes which files should be scanned.")
-def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, file_manifest, source_file_names):
+def scan(language, file_manifest, source_file_names):
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
-  parameters = Parameters()
-
-  if distance_threshold is None:
-    parameters.distance_threshold = supplier.distance_threshold
-  else:
-    parameters.distance_threshold = distance_threshold
-
-  if size_threshold is None:
-    parameters.size_threshold = supplier.size_threshold
-  else:
-    parameters.size_threshold = size_threshold
   # TODO: Configuration files!
+  parameters = Parameters()
+  parameters.distance_threshold = supplier.distance_threshold
+  parameters.size_threshold = supplier.size_threshold
+
+  source_file_names = set(source_file_names)
+  if file_manifest is not None:
+    source_file_names.update(set(manifest.contents(file_manifest)))
 
   source_files = []
-  source_file_names = list(source_file_names)
-  if file_manifest is not None:
-    source_file_names += list(manifest.contents(file_manifest))
 
   report = Report(parameters)
 
   def parse_file(file_name):
     try:
       logging.info('Parsing ' + file_name + '...')
-      sys.stdout.flush()
       source_file = supplier(file_name, parameters)
       source_file.getTree().propagateCoveredLineNumbers()
       source_file.getTree().propagateHeight()
@@ -144,30 +98,9 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
       report.addFileName(file_name)
       logging.info('done')
     except:
-      s = 'Can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc()
-      logging.warn(s)
-
-  def walk(dirname):
-    for dirpath, dirs, files in os.walk(file_name):
-      dirs[:] = (not ignore_dirs and dirs) or [d for d in dirs if d not in options.ignore_dirs]
-      # Skip all non-parseable files
-      files[:] = [f for f in files
-                  if os.path.splitext(f)[1][1:] == supplier.extension]
-      yield (dirpath, dirs, files)
+      logging.warn('Can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc())
 
   for file_name in source_file_names:
-    if os.path.isdir(file_name):
-      if no_recursion:
-        dirpath = file_name
-        files = [os.path.join(file_name, f) for f in os.listdir(file_name)
-                 if os.path.splitext(f)[1][1:] == supplier.extension]
-        for f in files:
-          parse_file(f)
-      else:
-        for dirpath, dirnames, filenames in walk(file_name):
-          for f in filenames:
-            parse_file(os.path.join(dirpath, f))
-    else:
       parse_file(file_name)
 
   duplicates = clone_detection_algorithm.findDuplicateCode(source_files, report)
@@ -187,8 +120,6 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
   report.sortByCloneSize()
 
   save_report(".orphanblack", report)
-  #with open(".orphanblack", "wb") as f:
-  #  pickle.dump(report, f)
 
 
 @orphanblack_cli.command()

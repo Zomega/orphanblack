@@ -21,9 +21,6 @@ from abstract_syntax_tree import *
 
 # NOTE that everywhere is written Unifier instead of AntiUnifier, for simplicity
 
-# Constants here
-verbose = True
-
 
 class FreeVariable(AbstractSyntaxTree):
     free_variables_count = 1
