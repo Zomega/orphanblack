@@ -73,16 +73,20 @@ def orphanblack_cli():
               describes which files should be scanned.")
 def scan(language, file_manifest, source_file_names):
 
+  # Determine the files to scan. If no files are given, use a default manifest.
+  if len(source_file_names) == 0 and file_manifest is None:
+    file_manifest = manifest.default_manifest(language)
+
+  source_file_names = set(source_file_names)
+  if file_manifest is not None:
+    source_file_names.update(set(manifest.contents(file_manifest)))
+
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
   # TODO: Configuration files!
   parameters = Parameters()
   parameters.distance_threshold = supplier.distance_threshold
   parameters.size_threshold = supplier.size_threshold
-
-  source_file_names = set(source_file_names)
-  if file_manifest is not None:
-    source_file_names.update(set(manifest.contents(file_manifest)))
 
   source_files = []
 

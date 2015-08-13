@@ -381,6 +381,16 @@ def contents(manifest_filename, rootdir=None):
       if manifest_filter.check(filepath):
         yield filepath
 
+
+def default_manifest(language):
+  defaults = {
+    'python': 'PYTHON',
+    'javascript': 'JAVASCRIPT'
+  }
+  manifest_filename = defaults[language]
+  dir, _ = os.path.split(__file__)
+  return os.path.join(dir, "default_manifests", manifest_filename)
+
 if __name__ == '__main__':
   for filepath in contents("ORPHAN_BLACK_MANIFEST"):
     print os.path.relpath(filepath, os.getcwd())
