@@ -1,0 +1,22 @@
+site_name: orphanblack
+site_url: http://orphanblack.readthedocs.org/
+site_description: Static Analysis for Software Clone Detection
+site_author: Will Oursler
+
+repo_url: https://github.com/Zomega/orphanblack/
+
+pages:
+- Home: index.md
+- Quick Start: quickstart.md
+- User Guide:
+  - Command Line Interface: cli.md
+  - Manifests: manifests.md
+  - Configuration Files: configuration.md
+- Developer Guide:
+  - API: api.md
+- FAQ: faq.md
+- Change Log: changelog.md
+
+theme: readthedocs
+
+copyright: Copyright &copy; 2015 Will Oursler

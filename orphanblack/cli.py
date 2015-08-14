@@ -20,17 +20,21 @@
 import sys
 
 import os
+import logging
 import traceback
 import click
-import pickle  # TODO: THIS IS A SECURITY RISK. Make JSON based version.
 from tabulate import tabulate
 
 import ast_suppliers
 import clone_detection_algorithm
 
+import manifest
 from parameters import Parameters
-from report import Report, CloneSummary, Snippet
+from report import Report, CloneSummary, Snippet, save_report, load_report
 import html_writer
+
+# TODO: configure with flags stuff, copy to logs...
+# logging.basicConfig(level=logging.DEBUG)
 
 # TODO: Incorprate into CLI?
 # TODO: Rewrite CLI as calls to API, once API exists.
@@ -47,38 +51,6 @@ Notice:
 The semantics of threshold options is discussed in the paper "Duplicate code detection using anti-unification", which can be downloaded from the site http://clonedigger.sourceforge.net . All arguments are optional. Supported options are:
 """
 
-# TODO: Remaining stuff... Add or replace functionality with .files
-# TODO: Removing prefix banning for now.
-'''
-  cmdline.add_option('-f', '--force',
-             action='store_true', dest='force',
-             help='')
-  cmdline.add_option('--force-diff',
-             action='store_true', dest='use_diff',
-             help='force highlighting of differences based on the diff algorithm')
-  cmdline.add_option('--fast',
-             action='store_true', dest='clusterize_using_hash',
-             help='find only clones, which differ in variable and function names and constants')
-  cmdline.add_option('--ignore-dir',
-             action='append', dest='ignore_dirs',
-             help='exclude directories from parsing')
-  cmdline.add_option('--report-unifiers',
-             action='store_true', dest='report_unifiers',
-             help='')
-  cmdline.add_option('--func-prefixes',
-             action='store',
-             dest='f_prefixes',
-             help='skip functions/methods with these prefixes (provide a CSV string as argument)')
-  cmdline.add_option('--file-list', dest='file_list',
-             help='a file that contains a list of file names that must be processed by Clone Digger')
-
-######################
-
-@click.option('--clusterize-using-dcup',
-              is_flag=True,
-              help="Mark each statement with its D-cup value instead of the most similar pattern.")
-'''
-
 
 @click.group()
 def orphanblack_cli():
@@ -90,87 +62,49 @@ def orphanblack_cli():
               type=click.Choice(['python', 'java', 'lua', 'javascript', 'js']),
               default='python',
               help="The language of the provided files.")
-@click.option('--no-recursion', is_flag=True)
-@click.option('--distance-threshold',
-              type=int,
-              default=None)  # TODO: Help
-@click.option('--hashing-depth',
-              type=int,
-              default=None)  # TODO: Help
-@click.option('--size-threshold',
-              type=int,
-              default=None)  # TODO: Help
+# These options / arguments determine which files will be scanned.
 @click.argument('source_file_names',
                 type=click.Path(exists=True),
                 nargs=-1)
-def scan(language, no_recursion, distance_threshold, hashing_depth, size_threshold, source_file_names):
+@click.option('--file-manifest',
+              type=click.Path(exists=True),
+              default=None,
+              help="The file manifest (formatted like a PyPI MANIFEST.in)\
+              describes which files should be scanned.")
+def scan(language, file_manifest, source_file_names):
+
+  # Determine the files to scan. If no files are given, use a default manifest.
+  if len(source_file_names) == 0 and file_manifest is None:
+    file_manifest = manifest.default_manifest(language)
+
+  source_file_names = set(source_file_names)
+  if file_manifest is not None:
+    source_file_names.update(set(manifest.contents(file_manifest)))
 
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
+  # TODO: Configuration files!
   parameters = Parameters()
-
-  if distance_threshold is None:
-    parameters.distance_threshold = supplier.distance_threshold
-  else:
-    parameters.distance_threshold = distance_threshold
-
-  if size_threshold is None:
-    parameters.size_threshold = supplier.size_threshold
-  else:
-    parameters.size_threshold = size_threshold
+  parameters.distance_threshold = supplier.distance_threshold
+  parameters.size_threshold = supplier.size_threshold
 
   source_files = []
-  source_file_names = list(source_file_names)
 
   report = Report(parameters)
 
-  ####### TODO: MAKE FILE LIST
-  ####### TODO: Populate parameters
-  #for option in cmdline.option_list:
-  #  if option.dest == 'file_list' and options.file_list is not None:
-  #    source_file_names.extend(open(options.file_list).read().split())
-  #    continue
-  #  elif option.dest is None:
-  #    continue
-  #  setattr(arguments, option.dest, getattr(options, option.dest))
-  ########
-
   def parse_file(file_name):
     try:
-      print 'Parsing ', file_name, '...',
-      sys.stdout.flush()
+      logging.info('Parsing ' + file_name + '...')
       source_file = supplier(file_name, parameters)
       source_file.getTree().propagateCoveredLineNumbers()
       source_file.getTree().propagateHeight()
       source_files.append(source_file)
       report.addFileName(file_name)
-      print 'done'
+      logging.info('done')
     except:
-      s = 'Error: can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc()
-      report.addErrorInformation(s)
-      print s
-
-  def walk(dirname):
-    for dirpath, dirs, files in os.walk(file_name):
-      dirs[:] = (not ignore_dirs and dirs) or [d for d in dirs if d not in options.ignore_dirs]
-      # Skip all non-parseable files
-      files[:] = [f for f in files
-                  if os.path.splitext(f)[1][1:] == supplier.extension]
-      yield (dirpath, dirs, files)
+      logging.warn('Can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc())
 
   for file_name in source_file_names:
-    if os.path.isdir(file_name):
-      if no_recursion:
-        dirpath = file_name
-        files = [os.path.join(file_name, f) for f in os.listdir(file_name)
-                 if os.path.splitext(f)[1][1:] == supplier.extension]
-        for f in files:
-          parse_file(f)
-      else:
-        for dirpath, dirnames, filenames in walk(file_name):
-          for f in filenames:
-            parse_file(os.path.join(dirpath, f))
-    else:
       parse_file(file_name)
 
   duplicates = clone_detection_algorithm.findDuplicateCode(source_files, report)
@@ -189,15 +123,13 @@ def scan(language, no_recursion, distance_threshold, hashing_depth, size_thresho
     n += 1
   report.sortByCloneSize()
 
-  with open(".orphanblack", "wb") as f:
-    pickle.dump(report, f)
+  save_report(".orphanblack", report)
 
 
 @orphanblack_cli.command()
 @click.option('-v', '--verbose', is_flag=True)
 def report(verbose):
-  with open(".orphanblack", "r") as f:
-    report = pickle.load(f)
+  report = load_report('.orphanblack')
   print "Found", len(report.clones), "clones.\n\n"
   for clone in report.clones:
     print clone.name
@@ -230,8 +162,7 @@ def report(verbose):
                     Defaults to output.html")
 def html(output_file_name):
   """Outputs a readable html page."""
-  with open(".orphanblack", "r") as f:
-    report = pickle.load(f)
+  report = load_report('.orphanblack')
   html_writer.write(report, output_file_name)
 
 # This portion of the CLI implements copyright and liscense notices in line

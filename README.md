@@ -55,6 +55,7 @@ Because `clonedigger` is distributed under GPL3, I am forced to also use GPL3 in
 * Replace janky use of `arguments.py` globals with the `Parameters` class.
 * Replace CLI with something a little less difficult to understand.
 * Provide persistent, serialiazable results reports (stored in `.orphanblack` files when a scan is run.).
+* Implement program-wide logging rather than ad-hoc error printouts.
 
 #### Planned Features
 * Grouping clones! Right now, if three regions of code are all similar to each other, three seperate clone reports, corresponding to each pair, are generated.
@@ -64,12 +65,14 @@ Because `clonedigger` is distributed under GPL3, I am forced to also use GPL3 in
 * Diffs based on anti-unification patterns.
 * ASTNode classes with built in anti-unification utilities
 * Ability to handle sequences elegantly (i.e. deal with insertion / removal in edit distances)
+* Configurations! (How this is implemented internally is something that I've had an idea on for a while / may become it's own project. Sort of like what Click is to argparse / optparse.)
 
 ### An Incomplete List of Features Removed (and Reasons):
 * Removed timing and profiling tools: Profiling is great, but there are dedicated python profiling tools avalible.
 * Removed diff highlighting in HTML reports: This may someday make a comeback, but for now, a clean Jinja2 template far outweighs the advantages of inline diffs.
 * Formatting of code segments is less careful than before. This is a temporary change pending the rewrite of internal AST representation.
 * Removed CPD XML output. This may be added back in later, using templates.
+* Multiple settings like `distance-threshold` which will be added again using configurations.
 
 ## License and Warranty Information
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
