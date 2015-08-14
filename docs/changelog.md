@@ -1,11 +1,9 @@
 # Change Log
 
-TODO: make a branch so there's a nice name for 0.1.11
-
 All notable changes to this project will be documented in this file.
 With the exeception of the 0.\*.\* versions, this project adheres to [Semantic Versioning](http://semver.org/).
 
-The 0.\*.\* versions represent an almost complete rewrite of an old tool, so a lot of breaking changes are expected between every version, even if the broad strokes stay the same.
+The 0.\*.\* versions represent an early alpha / complete rewrite of an old tool, so a lot of breaking changes are expected between every version, even if the broad strokes stay the same.
 
 The format of this changelog was informed by the guidlines at [keepachangelog.com](http://keepachangelog.com/)
 
@@ -50,5 +48,6 @@ This initial release repackaged clonedigger and made several coarse improvements
 * Jinja2-based html templates
 
 [planned]: https://github.com/Zomega/orphanblack/milestones
-[unreleased]: https://github.com/Zomega/orphanblack/compare/e85bdfc...develop
-[0.1.11]: https://github.com/Zomega/orphanblack/tree/e85bdfc72835438b1df68146e299166e4c4f98d2
+[unreleased]: https://github.com/Zomega/orphanblack/compare/v0.1.11...develop
+[0.2.0]: https://github.com/Zomega/orphanblack/compare/v0.1.11...v0.2.0
+[0.1.11]: https://github.com/Zomega/orphanblack/tree/v0.1.11
