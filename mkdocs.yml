@@ -14,6 +14,7 @@ pages:
   - Configuration Files: configuration.md
 - Developer Guide:
   - API: api.md
+  - config Sublibrary: config/config.md
 - FAQ: faq.md
 - Change Log: changelog.md
 
