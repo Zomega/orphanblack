@@ -17,20 +17,15 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with Clone Digger.  If not, see <http://www.gnu.org/licenses/>.
-import sys
-
-import os
-import logging
-import traceback
 import click
 from tabulate import tabulate
 
 import ast_suppliers
-import clone_detection_algorithm
+import api
 
 import manifest
 from parameters import Parameters
-from report import Report, CloneSummary, Snippet, save_report, load_report
+from report import save_report, load_report
 import html_writer
 
 # TODO: configure with flags stuff, copy to logs...
@@ -38,18 +33,6 @@ import html_writer
 
 # TODO: Incorprate into CLI?
 # TODO: Rewrite CLI as calls to API, once API exists.
-"""To run Clone Digger type:
-python clonedigger.py [OPTION]... [SOURCE FILE OR DIRECTORY]...
-
-The typical usage is:
-python clonedigger.py source_file_1 source_file_2 ...
-  or
-python clonedigger.py path_to_source_tree
-Don't forget to remove automatically generated sources, tests and third party libraries from the source tree.
-
-Notice:
-The semantics of threshold options is discussed in the paper "Duplicate code detection using anti-unification", which can be downloaded from the site http://clonedigger.sourceforge.net . All arguments are optional. Supported options are:
-"""
 
 
 @click.group()
@@ -84,44 +67,12 @@ def scan(language, file_manifest, source_file_names):
   supplier = ast_suppliers.abstract_syntax_tree_suppliers[language]
 
   # TODO: Configuration files!
+  # TODO: Parameter generation in API
   parameters = Parameters()
   parameters.distance_threshold = supplier.distance_threshold
   parameters.size_threshold = supplier.size_threshold
 
-  source_files = []
-
-  report = Report(parameters)
-
-  def parse_file(file_name):
-    try:
-      logging.info('Parsing ' + file_name + '...')
-      source_file = supplier(file_name, parameters)
-      source_file.getTree().propagateCoveredLineNumbers()
-      source_file.getTree().propagateHeight()
-      source_files.append(source_file)
-      report.addFileName(file_name)
-      logging.info('done')
-    except:
-      logging.warn('Can\'t parse "%s" \n: ' % (file_name,) + traceback.format_exc())
-
-  for file_name in source_file_names:
-      parse_file(file_name)
-
-  duplicates = clone_detection_algorithm.findDuplicateCode(source_files, report)
-  n = 1
-  for duplicate in duplicates:
-    distance = duplicate.calcDistance()
-    summary = CloneSummary(
-      "Clone #"+str(n),
-      [  # TODO: This is a mess! Most of this info should be assembled on the fly and in member functions.
-       Snippet(
-        duplicate[i].getSourceFile()._file_name,
-        duplicate[i].getCoveredLineNumbers(),
-        '\n'.join([line for line in duplicate[i].getSourceLines()])
-        ) for i in [0, 1]], distance)
-    report.addClone(summary)
-    n += 1
-  report.sortByCloneSize()
+  report = api.scan(language, source_file_names, parameters)
 
   save_report(".orphanblack", report)
 
@@ -165,7 +116,7 @@ def html(output_file_name):
   report = load_report('.orphanblack')
   html_writer.write(report, output_file_name)
 
-# This portion of the CLI implements copyright and liscense notices in line
+# This portion of the CLI implements copyright and license notices in line
 # with the GNU GPL3 best practices. It is not a replacement for LICENSE.txt.
 
 copyright_message = """
